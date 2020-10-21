@@ -1,0 +1,31 @@
+pipeline {
+    agent { docker { image 'any' } }
+    stages {
+    	stage('Checkout') {
+            steps { //Checking out the repo
+                sh "git checkout branchname"
+            }
+        }
+        stage('build') {
+            steps {
+                sh 'gradle build'
+            }
+        }
+        stage('Unit & Integration Tests') {
+            steps {
+                script {
+                    try {
+                        sh './gradlew clean test --no-daemon'
+                    } finally {
+                        junit '**/build/test-results/test/*.xml' 
+                    }
+                }
+            }
+        }
+        stage('Publish Artifact to Nexus') {
+            steps {
+                sh './gradlew publish --no-daemon'
+            }
+        }
+    }
+}
